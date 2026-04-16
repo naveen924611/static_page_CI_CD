@@ -1,32 +1,45 @@
-name: Deploy to EC2
+name: Deploy to EC2  # this is the name of the workflow, you can name it anything you want
 
-on:
-  push:
+on:  # this is a trigger that runs when we push to the main branch
+  push: # this is the event that triggers the workflow, in this case, a push to the repository
     branches: ["main"]
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+jobs: # the jobs section contains the all jobs that will be run as part of this workflow
+  deploy:  # this is deploy job, you can name it anything you want
+    runs-on: ubuntu-latest   # this specifes the os that the job will run on . this is a VM created on the Github 
 
+    # these are the sequatinal steps that will be run as part of the deploy job , here name specify the name of the step and uses specify the action that will be used in this step
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 #It is a keyword in GitHub Actions YAML used to call an action
+        #Use action named checkout
+        #From actions (GitHub official repo)
+        #Version v4
+        # this action checkout means clone the repo in the vm created by github actions and make it available for the next steps
 
       - name: Copy file to EC2
         uses: appleboy/scp-action@v0.1.7
+        #This is:
+        # A third-party action
+        # Written by someone else
+        # You are reusing it
+        # this copies the file from the github actions vm to the EC2 instance using scp (secure copy protocol)
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.EC2_HOST }}  
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           source: "index.html"
           target: "/home/ubuntu/"
 
       - name: Move file to Nginx folder
-        uses: appleboy/ssh-action@v1.0.3
-        with:
+        uses: appleboy/ssh-action@v1.0.3  #This is another third-party action that allows us to run ssh commands on the EC2 instance
+        with:   # connect using this credintials and run the following script
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             sudo mv /home/ubuntu/index.html /var/www/html/index.html
             sudo systemctl restart nginx
+# uses --> is a keyword used in the github action to reuse the specific package it may be a official package or a third party package
+# run --> is a keyword used in the github action to run a specific command or script
+# with --> is a keyword used in the github action to pass the parameters to the action that we are using in that step           
